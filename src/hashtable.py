@@ -1,11 +1,37 @@
 # '''
 # Linked List hash table key/value pair
 # '''
-class LinkedPair:
+class Node:
     def __init__(self, key, value):
         self.key = key
         self.value = value
         self.next = None
+    def __repr__(self):
+        return f"<{self.key}, {self.value}>"
+    
+class LinkedList:
+    def __init__(self):
+        self.head = None
+    def remove(self, key):
+        '''
+        Find and remove the node with the given value
+        '''
+        if not self.head:
+            print("Error: Value not found")
+        elif self.head.key == key:
+            # Remove head value
+            self.head = self.head.next
+        else:
+            parent = self.head
+            current = self.head.next
+            while current:
+                if current.key == key:
+                    # Remove value
+                    parent.next = current.next
+                    return
+                current = current.next
+            print("Error: Value not found")
+
 
 class HashTable:
     '''
@@ -55,19 +81,37 @@ class HashTable:
         Fill this in.
         '''
         
+        # # Hashmod the key to find the bucket
+        # index = self._hash_mod(key)
+        # # Check if a pair already exists in the bucket
+        # pair = self.storage[index]
+        # if pair is not None:
+        #     # If so, overwrite the key/value and throw a warning
+        #     if pair.key != key:
+        #         print("Warning: Overwriting value")
+        #         pair.key = key
+        #     pair.value = value
+        # else:
+        #     # If not, Create a new LinkedPair and place it in the bucket
+        #     self.storage[index] = LinkedPair(key, value)
+
         # Hashmod the key to find the bucket
         index = self._hash_mod(key)
-        # Check if a pair already exists in the bucket
-        pair = self.storage[index]
-        if pair is not None:
-            # If so, overwrite the key/value and throw a warning
-            if pair.key != key:
-                print("Warning: Overwriting value")
-                pair.key = key
-            pair.value = value
+        node = self.storage[index]
+        
+        if node is not None: #hash collision 
+            #print("hash collision detected")
+            while node is not None: # iterates through all non-Null keys of the nodes within the hash table location
+                if node.key == key: #if the current node's key matches the new insertion key
+                    node.value = value #update the value
+                    break
+                elif node.next == None: #if the current node's next is None we are at the tail
+                    node.next = Node(key,value) #create new Node at tail location
+                    break
+                node = node.next  
         else:
-            # If not, Create a new LinkedPair and place it in the bucket
-            self.storage[index] = LinkedPair(key, value)
+            self.storage[index] = Node(key,value)
+
 
 
 
@@ -80,16 +124,21 @@ class HashTable:
 
         Fill this in.
         '''
-        index = self._hash_mod(key)
+        # index = self._hash_mod(key)
 
-        # Check if a pair exists in the bucket with matching keys
-        if self.storage[index] is not None and self.storage[index].key == key:
-            # If so, remove that pair
-            self.storage[index] = None
-        else:
-            # Else print warning
-            print("Warning: Key does not exist")
+        # # Check if a pair exists in the bucket with matching keys
+        # if self.storage[index] is not None and self.storage[index].key == key:
+        #     # If so, remove that pair
+        #     self.storage[index] = None
+        # else:
+        #     # Else print warning
+        #     print("Warning: Key does not exist")
 
+        index = self._hash_mod(key) 
+        ll = LinkedList()
+        ll.head = self.storage[index]
+        ll.remove(key)
+        self.storage[index] = ll.head
 
     def retrieve(self, key):
         '''
@@ -100,15 +149,24 @@ class HashTable:
         Fill this in.
         '''
         # Get the index from hashmod
-        index = self._hash_mod(key)
+        # index = self._hash_mod(key)
 
-        # Check if a pair exists in the bucket with matching keys
-        if self.storage[index] is not None and self.storage[index].key == key:
-            # If so, return the value
-            return self.storage[index].value
-        else:
-            # Else return None
-            return None
+        # # Check if a pair exists in the bucket with matching keys
+        # if self.storage[index] is not None and self.storage[index].key == key:
+        #     # If so, return the value
+        #     return self.storage[index].value
+        # else:
+        #     # Else return None
+        #     return None
+
+        index = self._hash_mod(key)
+        node = self.storage[index] 
+        while node:
+            if node.key == key:
+                return node.value
+            node = node.next
+
+        return None
 
 
     def resize(self):
@@ -118,34 +176,17 @@ class HashTable:
 
         Fill this in.
         '''
-        pass
-
-
-
-if __name__ == "__main__":
-    ht = HashTable(2)
-
-    ht.insert("line_1", "Tiny hash table")
-    ht.insert("line_2", "Filled beyond capacity")
-    ht.insert("line_3", "Linked list saves the day!")
-
-    print("")
-
-    # Test storing beyond capacity
-    print(ht.retrieve("line_1"))
-    print(ht.retrieve("line_2"))
-    print(ht.retrieve("line_3"))
-
-    # Test resizing
-    old_capacity = len(ht.storage)
-    ht.resize()
-    new_capacity = len(ht.storage)
-
-    print(f"\nResized from {old_capacity} to {new_capacity}.\n")
-
-    # Test if data intact after resizing
-    print(ht.retrieve("line_1"))
-    print(ht.retrieve("line_2"))
-    print(ht.retrieve("line_3"))
-
-    print("")
+        pairs = []
+        for bucket in self.storage:
+            if bucket != None:
+                node = bucket
+                while(node):
+                    pairs.append((node.key,node.value))
+                    if(node.next == None):
+                        break
+                    node = node.next
+        self.capacity *= 2  # Number of buckets in the hash table
+        self.storage = [None] * self.capacity
+        for key,value in pairs:
+            self.insert(key,value)
+        return
