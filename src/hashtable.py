@@ -1,38 +1,4 @@
-# '''
-# Linked List hash table key/value pair
-# '''
-class Node:
-    def __init__(self, key, value):
-        self.key = key
-        self.value = value
-        self.next = None
-    def __repr__(self):
-        return f"<{self.key}, {self.value}>"
-    
-class LinkedList:
-    def __init__(self):
-        self.head = None
-    def remove(self, key):
-        '''
-        Find and remove the node with the given value
-        '''
-        if not self.head:
-            print("Error: Value not found")
-        elif self.head.key == key:
-            # Remove head value
-            self.head = self.head.next
-        else:
-            parent = self.head
-            current = self.head.next
-            while current:
-                if current.key == key:
-                    # Remove value
-                    parent.next = current.next
-                    return
-                current = current.next
-            print("Error: Value not found")
-
-
+from linked_list import *
 class HashTable:
     '''
     A hash table that with `capacity` buckets
@@ -98,19 +64,29 @@ class HashTable:
         # Hashmod the key to find the bucket
         index = self._hash_mod(key)
         node = self.storage[index]
-        
-        if node is not None: #hash collision 
-            #print("hash collision detected")
-            while node is not None: # iterates through all non-Null keys of the nodes within the hash table location
-                if node.key == key: #if the current node's key matches the new insertion key
-                    node.value = value #update the value
-                    break
-                elif node.next == None: #if the current node's next is None we are at the tail
-                    node.next = Node(key,value) #create new Node at tail location
-                    break
-                node = node.next  
+        ll = LinkedList()
+        ll.head = node
+        if ll.contains(key):
+            ll.update(key,value)
         else:
-            self.storage[index] = Node(key,value)
+            ll.add_to_head(key,value)
+            self.storage[index]= ll.head
+
+
+
+        
+        # if node is not None: #hash collision 
+        #     #print("hash collision detected")
+        #     while node is not None: # iterates through all non-Null keys of the nodes within the hash table location
+        #         if node.key == key: #if the current node's key matches the new insertion key
+        #             node.value = value #update the value
+        #             break
+        #         elif node.next == None: #if the current node's next is None we are at the tail
+        #             node.next = Node(key,value) #create new Node at tail location
+        #             break
+        #         node = node.next  
+        # else:
+        #     self.storage[index] = Node(key,value)
 
 
 
@@ -160,13 +136,16 @@ class HashTable:
         #     return None
 
         index = self._hash_mod(key)
-        node = self.storage[index] 
-        while node:
-            if node.key == key:
-                return node.value
-            node = node.next
+        node = self.storage[index]
+        ll = LinkedList()
+        ll.head = node
+        return ll.retrieve(key) 
+        # while node:
+        #     if node.key == key:
+        #         return node.value
+        #     node = node.next
 
-        return None
+        # return None
 
 
     def resize(self):
